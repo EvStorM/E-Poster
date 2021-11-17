@@ -1,6 +1,6 @@
 <template>
   <view class="canvas">
-    <canvas canvas-id="myCanvasEvils" :style="{ width: width + 'px', height: height + 'px' }"></canvas>
+    <canvas canvas-id="myCanvas" :style="{ width: width + 'px', height: height + 'px' }"></canvas>
   </view>
 </template>
 <!-- 
@@ -307,7 +307,7 @@ list参数说明：
           this.ctx.draw(false, draw => {
             uni.canvasToTempFilePath(
               {
-                canvasId: 'myCanvasEvils',
+                canvasId: 'myCanvas',
                 success: res => {
                   // 在H5平台下，tempFilePath 为 base64
                   console.log('图片已保存至本地：', res.tempFilePath);
@@ -334,9 +334,8 @@ list参数说明：
     },
     methods: {
       create() {
-        let canvas = uni.createCanvasContext('myCanvasEvils', this);
+        let canvas = uni.createCanvasContext('myCanvas', this);
         this.ctx = canvas;
-        console.log('%c [ this.ctx ]-「Poster.vue」', 'font-size:13px; background:#FFE47F; color:#000000;', this.ctx);
         this.generateImg();
       },
       async generateImg() {
@@ -402,7 +401,7 @@ list参数说明：
       saveImg() {
         uni.canvasToTempFilePath(
           {
-            canvasId: 'myCanvasEvils',
+            canvasId: 'myCanvas',
             success: res => {
               // 在H5平台下，tempFilePath 为 base64
               uni.saveImageToPhotosAlbum({
