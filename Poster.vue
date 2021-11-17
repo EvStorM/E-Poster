@@ -13,20 +13,19 @@ list参数说明：
  width: 图片宽度,
  height: 图片高度,
  rotate: 旋转角度
+ mode:'center' 居中自适应
  shape: 形状，默认无，可选值：circle 圆形 如果是number,则生成圆角矩形
  area: {x,y,width,height}  // 绘制范围，超出该范围会被剪裁掉 该属性与shape暂时无法同时使用，area存在时，shape失效
 矩形渲染：
  type: 'square',
  x: X轴位置,
  y: Y轴位置,
- path: 图片路径,
  width: 图片宽度,
  height: 图片高度,
  rotate: 旋转角度
  shape: 形状，默认无，可选值：circle 圆形 如果是number,则生成圆角矩形
  fillStyle:填充的背景样式
  area: {x,y,width,height}  // 绘制范围，超出该范围会被剪裁掉 该属性与shape暂时无法同时使用，area存在时，shape失效
- 
  文字渲染：
  type: 'text',
  x: X轴位置,
@@ -35,7 +34,6 @@ list参数说明：
  size: 字体大小,
  textBaseline： 基线 默认top  可选值：'top'、'bottom'、'middle'、'normal'
  color: 颜色
- 
  多行文字渲染：
  type: 'textarea',
  x: X轴位置,
@@ -153,39 +151,28 @@ list参数说明：
           this.ctx.arc(left + r, top + height - r, r, pi / 2, pi);
         };
         // 图片自适应
-        const adaptiveImg = (img, x, y) => {
-          const { imgW: wt, imgH: ht, width: cWidth, height: cHeight } = img;
-          const temp = {};
-          if (cWidth >= wt && cHeight >= ht) {
-            // 照片小于等于画布尺寸
-            temp.dWidth = wt;
-            temp.dHeight = ht;
-            x = cWidth / 2 - wt;
-            y = cHeight / 2 - ht / 2;
-          } else {
-            if (wt >= ht) {
-              // 宽度优先
-              temp.dWidth = cWidth;
-              temp.dHeight = (ht * cWidth) / wt;
-              y = cHeight / 2 - ht / 2;
+        const adaptiveImg = (img, x, y, mode) => {
+          const { imgW: w, imgH: h, width: dWidth, height: dHeight } = img;
+          let dw = dWidth / w; //canvas与图片的宽比
+          let dh = dHeight / h; //canvas与图片的高比
+          // 裁剪图片中间部分
+          if ((w > dWidth && h > dHeight) || (w < dWidth && h < dHeight)) {
+            if (dw > dh) {
+              this.ctx.drawImage(img.path, 0, (h - dHeight / dw) / 2, w, dHeight / dw, x, y, dWidth, dHeight);
             } else {
-              // 高度优先
-              temp.dHeight = cHeight;
-              temp.dWidth = (wt * cHeight) / ht;
-              x = cWidth / 2 - wt;
+              this.ctx.drawImage(img.path, (w - dWidth / dh) / 2, 0, dWidth / dh, h, x, y, dWidth, dHeight);
             }
-            // 缩放后依然大于画布
-            if (temp.dWidth > cWidth) {
-              temp.dHeight = (temp.dHeight * cWidth) / temp.dWidth;
-              temp.dWidth = cWidth;
-              y = cHeight / 2 - ht / 2;
-            } else if (temp.dHeight > cHeight) {
-              temp.dWidth = (temp.dWidth * cHeight) / temp.dHeight;
-              temp.dHeight = cHeight;
-              x = cWidth / 2 - wt;
+          } else {
+            // 拉伸图片
+            if (w < dWidth) {
+              this.ctx.drawImage(img.path, 0, (h - dHeight / dw) / 2, w, dHeight / dw, x, y, dWidth, dHeight);
+            } else {
+              this.ctx.drawImage(img.path, (w - dWidth / dh) / 2, 0, dWidth / dh, h, x, y, dWidth, dHeight);
             }
           }
-          this.ctx.drawImage(img.path, x, y, temp.dWidth, temp.dHeight);
+          // 裁剪图片中间部分
+          // this.ctx.drawImage(img.path, sx, sy, sWidth, sHeight, x, y, dWidth, dHeight);
+          // this.ctx.drawImage(img.path, x, y, temp.dWidth, temp.dHeight);
         };
         // 绘制背景
         this.ctx.setFillStyle(this.backgroundColor);
@@ -267,7 +254,7 @@ list参数说明：
                       let degrees = current.rotate ? Number(current.rotate) % 360 : 0;
                       this.ctx.rotate((degrees * Math.PI) / 180);
                       current.mode
-                        ? adaptiveImg(current, current.x - offsetX, current.y - offsetY)
+                        ? adaptiveImg(current, current.x - offsetX, current.y - offsetY, current.mode)
                         : this.ctx.drawImage(current.path, current.x - offsetX, current.y - offsetY, current.width, current.height);
                       this.ctx.closePath();
                       this.ctx.restore(); // 恢复之前保存的上下文
@@ -284,7 +271,7 @@ list参数说明：
                       let degrees = current.rotate ? Number(current.rotate) % 360 : 0;
                       this.ctx.rotate((degrees * Math.PI) / 180);
                       current.mode
-                        ? adaptiveImg(current, current.x - offsetX, current.y - offsetY)
+                        ? adaptiveImg(current, current.x - offsetX, current.y - offsetY, current.mode)
                         : this.ctx.drawImage(current.path, current.x - offsetX, current.y - offsetY, current.width, current.height);
                       this.ctx.closePath();
                       this.ctx.restore(); // 恢复之前保存的上下文
@@ -321,10 +308,6 @@ list参数说明：
               this
             );
           });
-          /* draw完不能立刻转存，需要等待一段时间 */
-          // setTimeout(() => {
-          //   console.log('final counter', this.counter);
-          // }, 200);
         }
       }
     },
@@ -336,6 +319,7 @@ list参数说明：
       create() {
         let canvas = uni.createCanvasContext('myCanvas', this);
         this.ctx = canvas;
+        console.log('%c [ this.ctx ]-「Poster.vue」', 'font-size:13px; background:#FFE47F; color:#000000;', this.ctx);
         this.generateImg();
       },
       async generateImg() {
@@ -377,26 +361,6 @@ list参数说明：
           return allData;
         }
         this.drawPathQueue = await processArray(this.list);
-        /* 将图片路径取出放入绘图队列 */
-        // for (let i = 0; i < this.list.length; i++) {
-        //   let current = this.list[i];
-        //   current.index = i;
-        //   /* 如果是文本直接放入队列 */
-        //   if (current.type === 'text' || current.type === 'textarea' || current.type === 'square') {
-        //     this.drawPathQueue.push(current);
-        //     continue;
-        //   }
-        //   /* 图片需获取本地缓存path放入队列 */
-        //   await uni.getImageInfo({
-        //     src: current.path,
-        //     success: async res => {
-        //       current.path = res.path;
-        //       current.imgW = res.width;
-        //       current.imgH = res.height;
-        //       await this.drawPathQueue.push(current);
-        //     }
-        //   });
-        // }
       },
       saveImg() {
         uni.canvasToTempFilePath(

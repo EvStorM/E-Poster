@@ -11,7 +11,7 @@ uniApp的海报生成组件
 
 3. 将**setTimeout**延时保存图片的方式改为**draw**回调保存,减少了海报生成等待时间
 
-4. 去掉了**mounted**生命周期的生成逻辑,改为**$refs**调用内部的**create()**方法.更灵活控制
+4. 去掉了**mounted**生命周期的生成逻辑,改为**$refs** 调用内部的 **create()**方法.更灵活控制
 
    
 
@@ -70,7 +70,8 @@ wx.qlogo.cn
           y: 736,
           width: 600,
           height: 377.25,
-          shape:12
+          shape:12,
+           mode:'center'
         });
           list.push({
             type: 'square',
@@ -100,6 +101,7 @@ list参数说明：
  width: 图片宽度,
  height: 图片高度,
  rotate: 旋转角度
+  mode:'center' 居中自适应
  shape: 形状，默认无，可选值：circle 圆形 如果是number,则生成圆角矩形
  area: {x,y,width,height}  // 绘制范围，超出该范围会被剪裁掉 该属性与shape暂时无法同时使用，area存在时，shape失效
 矩形渲染：
