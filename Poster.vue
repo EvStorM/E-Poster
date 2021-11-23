@@ -1,6 +1,6 @@
 <template>
   <view class="canvas">
-    <view class="theContent">
+    <view ref="Content" class="theContent">
       <slot></slot>
     </view>
     <canvas canvas-id="myCanvas" :style="{ width: width + 'px', height: height + 'px' }"></canvas>
@@ -229,19 +229,16 @@ export default {
               if (current.index === i) {
                 /* 文本绘制 */
                 if (current.type === "text") {
-                  console.log("绘制文本：" + current.text);
                   fillText(current);
                   this.counter--;
                 }
                 /* 多行文本 */
                 if (current.type === "textarea") {
-                  console.log("绘制段落：" + current.text);
                   fillParagraph(current);
                   this.counter--;
                 }
                 /* 多行文本 */
                 if (current.type === "square") {
-                  console.log("绘制矩形：" + current.text);
                   this.ctx.save(); // 保存上下文，绘制后恢复
                   this.ctx.beginPath(); //开始绘制
                   //画好了圆 剪切  原始画布中剪切任意形状和尺寸。一旦剪切了某个区域，则所有之后的绘图都会被限制在被剪切的区域内 这也是我们要save上下文的原因
@@ -259,7 +256,6 @@ export default {
                 }
                 /* 图片绘制 */
                 if (current.type === "image") {
-                  console.log("绘制图片：" + current.path);
                   if (current.area) {
                     // 绘制绘图区域
                     this.ctx.save();
@@ -302,8 +298,6 @@ export default {
                     this.ctx.save(); // 保存上下文，绘制后恢复
                     this.ctx.beginPath(); //开始绘制
                     roundRect(current.x, current.y, current.width, current.height, current.shape);
-                    // radiusRect(current.x, current.y, current.width, current.height, current.shape);
-                    console.log("%c [ current ]-「Poster.vue」", "font-size:13px; background:#FFE47F; color:#000000;", current);
                     //画好了圆 剪切 原始画布中剪切任意形状和尺寸。一旦剪切了某个区域，则所有之后的绘图都会被限制在被剪切的区域内 这也是我们要save上下文的原因
                     // 设置旋转中心
                     let offsetX = current.x + Number(current.width) / 2;
@@ -357,6 +351,13 @@ export default {
     // console.log('mounted');
   },
   methods: {
+    /**
+     * @param {*} elClass 元素名称
+     * @param {*} slot 是否采用slot方式
+     * @param {*} startX  X偏移
+     * @param {*} startY Y偏移
+     * @return {*}
+     */
     createForElRect(elClass = "Poster", slot = true, startX = 0, startY = 0) {
       uni
         .createSelectorQuery()
@@ -376,7 +377,6 @@ export default {
             let list = [];
             const sys = uni.getSystemInfoSync();
             res.forEach((val, index) => {
-              console.log("%c [ val ]-「Poster.vue」", "font-size:13px; background:#FFE47F; color:#000000;", val);
               let multiple = this.multiple;
               let src = val.src || val.dataset.enode || "";
               let type = val.src ? "image" : val.dataset.etype || "text";
@@ -385,11 +385,9 @@ export default {
               let shape = val.borderRadius == "50%" ? "circle" : val.borderRadius.replace("px", "") * 2;
               let x = (startX + val.left - (slot ? sys.screenWidth : 0)) / multiple;
               let y = (startY + val.top) / multiple;
+              y = (startY + val.top - (slot ? 50 : 0)) / multiple;
               // #ifdef H5
               y = (startY + val.top) / multiple;
-              // #endif
-              // #ifdef MP
-              y = (startY + val.top - (slot ? 50 : 0)) / multiple;
               // #endif
               list.push({
                 type: type,
