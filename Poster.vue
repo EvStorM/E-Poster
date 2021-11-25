@@ -3,7 +3,7 @@
     <view ref="Content" class="theContent">
       <slot></slot>
     </view>
-    <canvas canvas-id="myCanvas" :style="{ width: width + 'px', height: height + 'px' }"></canvas>
+    <canvas canvas-id="myCanvas" id="myCanvas" @onReady="onCanvasReady" :style="{ width: width + 'px', height: height + 'px' }"></canvas>
   </view>
 </template>
 <!-- 
@@ -50,6 +50,7 @@ list参数说明：
  color: 颜色
  -->
 <script>
+let timer = null;
 export default {
   name: "Poster",
   props: {
@@ -60,18 +61,13 @@ export default {
     },
     // 海报宽度(默认设备宽度放大两倍) 建议都放大两倍
     width: {
-      type: Number,
+      type: [Number, String],
       default: uni.getSystemInfoSync().windowWidth * 2,
     },
     // 海报高度(默认设备高度放大两倍)
     height: {
-      type: Number,
+      type: [Number, String],
       default: uni.getSystemInfoSync().windowHeight * 2,
-    },
-    // 缩放倍数
-    multiple: {
-      type: Number,
-      default: 0.5,
     },
     //背景颜色
     backgroundColor: {
@@ -219,6 +215,12 @@ export default {
       this.ctx.fillRect(0, 0, this.width, this.height);
       /* 所有元素入队则开始绘制 */
       if (newVal.length === this.renderList.length) {
+        if (newVal.length == 0) {
+          this.$emit("on-error", {
+            msg: "数据为空",
+          });
+          return;
+        }
         try {
           // console.log('生成的队列：' + JSON.stringify(newVal));
           console.log("开始绘制...");
@@ -229,16 +231,19 @@ export default {
               if (current.index === i) {
                 /* 文本绘制 */
                 if (current.type === "text") {
+                  console.log("开始绘制...text");
                   fillText(current);
                   this.counter--;
                 }
                 /* 多行文本 */
                 if (current.type === "textarea") {
+                  console.log("开始绘制...textarea");
                   fillParagraph(current);
                   this.counter--;
                 }
                 /* 多行文本 */
                 if (current.type === "square") {
+                  console.log("开始绘制...square");
                   this.ctx.save(); // 保存上下文，绘制后恢复
                   this.ctx.beginPath(); //开始绘制
                   //画好了圆 剪切  原始画布中剪切任意形状和尺寸。一旦剪切了某个区域，则所有之后的绘图都会被限制在被剪切的区域内 这也是我们要save上下文的原因
@@ -256,6 +261,7 @@ export default {
                 }
                 /* 图片绘制 */
                 if (current.type === "image") {
+                  console.log("开始绘制...image");
                   if (current.area) {
                     // 绘制绘图区域
                     this.ctx.save();
@@ -336,8 +342,8 @@ export default {
                 this.posterUrl = res.tempFilePath;
                 this.$emit("on-success", res.tempFilePath);
               },
-              fail: (res) => {
-                console.log(res);
+              fail: (error) => {
+                this.$emit("on-error", error);
               },
             },
             this
@@ -351,6 +357,19 @@ export default {
     // console.log('mounted');
   },
   methods: {
+    // #ifdef MP-ALIPAY
+    onCanvasReady() {
+      const query = my.createSelectorQuery();
+      query
+        .select("#myCanvas")
+        .node()
+        .exec((res) => {
+          const canvas = res[0].node;
+          const ctx = canvas.getContext("2d");
+        });
+    },
+    // #endif
+
     /**
      * @param {*} elClass 元素名称
      * @param {*} slot 是否采用slot方式
@@ -376,8 +395,8 @@ export default {
           (res) => {
             let list = [];
             const sys = uni.getSystemInfoSync();
+            let multiple = sys.windowWidth / this.width;
             res.forEach((val, index) => {
-              let multiple = this.multiple;
               let src = val.src || val.dataset.enode || "";
               let type = val.src ? "image" : val.dataset.etype || "text";
               let text = val.dataset.enode || "";
@@ -450,14 +469,14 @@ export default {
           /* 图片需获取本地缓存path放入队列 */
         }
       };
-      async function processArray(array) {
+      const processArray = async (array) => {
         // map array to promises
         const promises = array.map((v, i) => delayedLog(v, i));
         // wait until all promises are resolved
         const allData = await Promise.all(promises);
         console.log("Done!", allData);
         return allData;
-      }
+      };
       this.drawPathQueue = await processArray(this.renderList);
     },
     saveImg() {
