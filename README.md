@@ -1,7 +1,63 @@
-# E-Poster
+# evils-el-poster
 uniApp的海报生成组件
+
+# 新功能
+可以通过直接获取页面元素内容,不必要自己将每个元素内容确定好定位确定好内容写成列表
+
+## 示例
+
+### 使用方法
+
+ 1. 将需要渲染并且有内容的元素都添加``Poster1``的样式名.
+ 2. 给需要渲染的元素添加``data-etype``,定义类型,不填则默认为text,
+ 3. 给需要渲染的元素添加``data-enode``,传入内容,此项必填
+ 4. 最后调用``this.$refs.Eposter.createForElRect(elClass, false)``,开始生成海报.第一个值为样式名称,第二个值为是否是``slot``内的元素.默认值为``true``,如果最后生成图片位置合适,还可以传入startX,startY,额外调整开始点的坐标.
+### 示例1
+```
+    <view @click="getElRect1('Poster1')" class="ev-m-32 ev-fr-s-c">
+      <view class="ev-fc-s-c">
+        <image data-etype="image" :data-enode="info.avatar" class="ev-w-164 Poster1 ev-h-164 ev-round" :src="info.avatar" mode="aspectFit"> </image>
+        <text :data-enode="info.name" class="ev-m-t-20 Poster1 ev-font-24 ev-color-6">{{ info.name }} </text>
+      </view>
+      <view class="ev-falign-self-s ev-m-l-20 ev-color-9">
+        <text :data-enode="time" class="ev-font-24 Poster1">{{ time }} </text>
+        <view data-etype="textarea" :data-enode="info.desc" class="ev-font-24 Poster1">
+          {{ info.desc }}
+        </view>
+      </view>
+    </view>
+    <Eposter width="750" height="1334" :list="list" backgroundColor="rgb(255, 255, 255)" @on-success="onSuccess" @on-error="onError" ref="Eposter"> </Eposter>
+```
+### 示例2
+ 将内容写在组件内部,
+```
+    <button @click="getElRect('Poster')" class="ev-w-b80 ev-m-b-40">getElRect</button>
+    <Eposter width="750" height="1334" @on-error="onError" :list="list" backgroundColor="rgb(255, 255, 255)" @on-success="onSuccess" ref="Eposter">
+      <view class="ev-m-32 ev-fr-s-c">
+        <view class="ev-fc-s-c">
+          <image
+            data-etype="image"
+            :data-enode="info.avatar"
+            class="ev-w-164 Poster ev-h-164 ev-round-32"
+            :src="info.avatar"
+            mode="aspectFit|aspectFill|widthFix"
+          >
+          </image>
+          <text :data-enode="info.name" class="ev-m-t-20 Poster ev-font-24 ev-color-6">{{ info.name }} </text>
+        </view>
+        <view class="ev-falign-self-s ev-m-l-20 ev-color-9">
+          <text :data-enode="time" class="ev-font-24 Poster">{{ time }} </text>
+          <view data-etype="textarea" :data-enode="info.desc" class="ev-font-24 Poster">
+            {{ info.desc }}
+          </view>
+        </view>
+      </view>
+    </Eposter>
+```
+
+
 ## 来源
-来自uniapp插件市场的 [zhangyuhao-poster](https://ext.dcloud.net.cn/plugin?id=4611#rating)项目
+来自uniapp插件市场的 [zhangyuhao-poster](https://ext.dcloud.net.cn/plugin?id=4611#rating)项目,并做了很多的修改
 
 ## 修改
 
@@ -15,9 +71,7 @@ uniApp的海报生成组件
 
 5. 新增图片自适应功能
 
-   
-
-## 特别提示
+## 特别提示1
 
 如果小程序线上不显示,可能是**uni.getImageInfo**API的问题,这个API需先配置download域名白名单才能生效,微信头像也同样需要配置域名白名单,在微信后台配置这两个域名即可
 
@@ -25,71 +79,9 @@ uniApp的海报生成组件
 thirdwx.qlogo.cn
 wx.qlogo.cn
 ```
+## 特别提示2
 
-
-
-## 示例
-
-```vue
-// 使用    
-<poster
-      :list="posterlist"
-      :width="posterWidth"
-      backgroundColor="#FFF"
-      :height="posterHeight"
-      @on-error="posterError"
-      @on-success="posterSuccess"
-      ref="poster"
-    />
-```
-
-```javascript
-        let list = [];
-        list.push({
-          type: 'text',
-          x: 55,
-          y: 72,
-          text: this.shareInfo.nickname || '',
-          width: 480,
-          height:  90,
-          size: 32,
-          color: '#333'
-        });
-        list.push({
-          type: 'textarea',
-          x: 55,
-          y: 72,
-          text: this.shareInfo.title || '',
-          width: 480,
-          height:  90,
-          size: 32,
-          color: '#333'
-        });
-        list.push({
-          type: 'image',
-          path: 'share/shareInfo.png',
-          x: 0,
-          y: 736,
-          width: 600,
-          height: 377.25,
-          shape:12,
-           mode:'center'
-        });
-          list.push({
-            type: 'square',
-            x: 445,
-            y: 394 ,
-            width: 90,
-            height: 40 ,
-            shape: 6,
-            fillStyle: 'rgba(0, 0, 0, 0.5)'
-          });
-        this.posterlist = list;
-// 延迟0毫秒调用,主要是滞后调用,等待数组创建完成       
-setTimeout(() => {
-          this.$refs.poster.create();
-        }, 0);
-```
+支付宝小程序会有 ``this.callback is not a function`` 的报错,是属于``uniapp``的接口问题.
 
 ## 说明
 
